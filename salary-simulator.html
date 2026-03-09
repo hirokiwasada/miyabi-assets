@@ -428,6 +428,18 @@
   .emp-ref .check { color: var(--gold-dark); font-weight: 500; }
   .emp-ref .cross { color: #bbb; }
 
+  .tag-item .tag-delete {
+    font-size: 14px;
+    color: #bbb;
+    cursor: pointer;
+    margin-left: 4px;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .tag-item .tag-delete:hover { color: #e55; }
+  .tag-item.level-standard .tag-delete { color: #999; }
+  .tag-item.level-top .tag-delete { color: #666; }
+
   @media (max-width: 600px) {
     .container { padding: 20px 16px 48px; }
     .card { padding: 20px; }
@@ -681,9 +693,29 @@
     </div>
   </div>
 
+  <!-- 特殊スキル -->
+  <div class="card">
+    <div class="card-title">05 Special Skills</div>
+    <div class="form-group">
+      <label>特殊スキル <span class="hint">14タグ以外で評価すべきスキルがあれば追加</span></label>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input type="text" id="special-skill-input" placeholder="スキル名を入力"
+          style="flex:1; padding:8px 14px; border:1.5px solid var(--border); border-radius:100px; font-size:14px; font-family:'Noto Sans JP',sans-serif; outline:none; background:var(--warm-bg);"
+          onkeydown="if(event.key==='Enter'){addSpecialSkill();}">
+        <button onclick="addSpecialSkill()"
+          style="padding:8px 20px; border:1.5px solid var(--gold); border-radius:100px; background:var(--black); color:var(--gold); font-family:'Poppins',sans-serif; font-size:13px; font-weight:500; cursor:pointer; letter-spacing:1px; white-space:nowrap;">+ 追加</button>
+      </div>
+      <div class="tag-list" id="special-skill-list"></div>
+      <div class="tag-note" style="margin-top:8px">
+        クリックで None → Standard → Top の順に切替。右端の × で削除。<br>
+        通常タグと合算して加算率を計算します（同じルール: 乗算ボーナス・上限50%）。
+      </div>
+    </div>
+  </div>
+
   <!-- 賞与（正社員・契約社員のみ） -->
   <div class="card" id="bonus-card">
-    <div class="card-title">05 Bonus</div>
+    <div class="card-title">06 Bonus</div>
     <div class="form-group">
       <label>賞与月数 <span class="hint">業績連動（年間合計）</span></label>
       <div class="slider-row">
@@ -961,6 +993,43 @@ function updateUI() {
   document.getElementById('bonus-val').textContent = parseFloat(bm).toFixed(1) + 'ヶ月';
 
   calculate();
+}
+
+// Special skill management
+function addSpecialSkill() {
+  const input = document.getElementById('special-skill-input');
+  const name = input.value.trim();
+  if (!name) return;
+
+  const list = document.getElementById('special-skill-list');
+  const el = document.createElement('div');
+  el.className = 'tag-item selectable';
+  el.dataset.level = 'none';
+  el.innerHTML =
+    '<span class="tag-name">' + escapeHtml(name) + '</span>' +
+    '<span class="level-badge"></span>' +
+    '<span class="tag-delete" title="削除">&times;</span>';
+
+  el.addEventListener('click', function(e) {
+    if (e.target.classList.contains('tag-delete')) {
+      el.remove();
+      updateTagStatus();
+      updateUI();
+      return;
+    }
+    cycleTag(el);
+  });
+
+  list.appendChild(el);
+  input.value = '';
+  updateTagStatus();
+  updateUI();
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
 }
 
 // Event listeners
