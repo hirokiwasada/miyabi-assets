@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIYABI 報酬シミュレーター</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --gold: #A2945F;
+    --gold-light: #C4B88A;
+    --gold-dark: #8A7D4E;
+    --black: #111111;
+    --dark: #222222;
+    --white: #FFFFFF;
+    --warm-bg: #F8F6F2;
+    --border: #E5E0D5;
+    --text-secondary: #666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--warm-bg);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--black);
+    color: var(--white);
+    padding: 32px 0;
+    text-align: center;
+  }
+  .header h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .header p {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+
+  .card-title {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+  label .hint {
+    font-weight: 300;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  /* Radio buttons as pill selector */
+  .pill-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pill-group input[type="radio"] { display: none; }
+  .pill-group label.pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0;
+  }
+  .pill-group label.pill:hover {
+    border-color: var(--gold-light);
+    background: rgba(162,148,95,0.04);
+  }
+  .pill-group input[type="radio"]:checked + label.pill {
+    background: var(--black);
+    color: var(--gold);
+    border-color: var(--black);
+    font-weight: 500;
+  }
+  .pill-group input[type="radio"]:disabled + label.pill {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* Slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .slider-value {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--gold-dark);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* Result */
+  .result-card {
+    background: var(--black);
+    border: none;
+    color: var(--white);
+  }
+  .result-card .card-title {
+    color: var(--gold);
+    border-bottom-color: #333;
+  }
+
+  .result-main {
+    text-align: center;
+    padding: 20px 0 24px;
+  }
+  .result-label {
+    font-size: 13px;
+    color: var(--gold-light);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .result-amount {
+    font-family: 'Poppins', sans-serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .result-amount .unit {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--gold-light);
+    margin-left: 4px;
+  }
+  .result-range {
+    font-size: 13px;
+    color: #888;
+    margin-top: 8px;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding-top: 20px;
+    border-top: 1px solid #333;
+  }
+  .breakdown-item {
+    text-align: center;
+  }
+  .breakdown-item .bl {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .breakdown-item .bv {
+    font-family: 'Poppins', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--white);
+  }
+  .breakdown-item .bv .bu {
+    font-size: 12px;
+    font-weight: 400;
+    color: #888;
+  }
+
+  .note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(162,148,95,0.06);
+    border-radius: 8px;
+    border-left: 3px solid var(--gold-light);
+  }
+  .note strong { color: var(--dark); }
+
+  .tag-note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  /* Skill tag reference table */
+  .tag-ref {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .tag-ref-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gold-dark);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .tag-category {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+  .tag-category:first-of-type { margin-top: 0; }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    background: var(--warm-bg);
+    border: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .tag-item .tag-name {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--dark);
+  }
+  .tag-item .tag-desc {
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+  .tag-item.selectable {
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tag-item.selectable:hover {
+    border-color: var(--gold-light);
+    background: rgba(162,148,95,0.06);
+  }
+  /* Standard state */
+  .tag-item.selectable.level-standard {
+    background: var(--black);
+    border-color: var(--black);
+  }
+  .tag-item.selectable.level-standard .tag-name {
+    color: var(--white);
+  }
+  .tag-item.selectable.level-standard .tag-desc {
+    color: #999;
+  }
+  /* Top state */
+  .tag-item.selectable.level-top {
+    background: var(--gold);
+    border-color: var(--gold-dark);
+  }
+  .tag-item.selectable.level-top .tag-name {
+    color: var(--black);
+    font-weight: 700;
+  }
+  .tag-item.selectable.level-top .tag-desc {
+    color: #555;
+  }
+  .tag-item.selectable.level-top .level-badge {
+    background: var(--black);
+    color: var(--gold);
+  }
+
+  .level-badge {
+    font-family: 'Poppins', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    display: none;
+  }
+  .tag-item.level-standard .level-badge,
+  .tag-item.level-top .level-badge {
+    display: inline-block;
+  }
+  .tag-item.level-standard .level-badge {
+    background: var(--gold);
+    color: var(--black);
+  }
+
+  .tag-status {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gold-dark);
+    padding: 10px 16px;
+    background: rgba(162,148,95,0.06);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  /* Grade reference table */
+  .grade-ref {
+    margin-top: 16px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .grade-ref th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--gold-dark);
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  .grade-ref td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--dark);
+    line-height: 1.5;
+    vertical-align: top;
+  }
+  .grade-ref tr:last-child td { border-bottom: none; }
+  .grade-ref .grade-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--gold-dark);
+    white-space: nowrap;
+  }
+  .grade-ref .grade-eval {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Employment type comparison */
+  .emp-ref {
+    margin-top: 16px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .emp-ref th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--gold-dark);
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .emp-ref td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--dark);
+    line-height: 1.5;
+    vertical-align: top;
+    font-size: 12px;
+  }
+  .emp-ref tr:last-child td { border-bottom: none; }
+  .emp-ref .check { color: var(--gold-dark); font-weight: 500; }
+  .emp-ref .cross { color: #bbb; }
+
+  @media (max-width: 600px) {
+    .container { padding: 20px 16px 48px; }
+    .card { padding: 20px; }
+    .result-amount { font-size: 36px; }
+    .result-breakdown { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .pill-group label.pill { padding: 6px 14px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>MIYABI</h1>
+  <p>報酬シミュレーター</p>
+</div>
+
+<div class="container">
+
+  <!-- 雇用形態 -->
+  <div class="card">
+    <div class="card-title">01 Employment Type</div>
+    <div class="form-group">
+      <label>雇用形態</label>
+      <div class="pill-group">
+        <input type="radio" name="emp" id="emp-full" value="fulltime" checked>
+        <label class="pill" for="emp-full">正社員</label>
+        <input type="radio" name="emp" id="emp-contract" value="contract">
+        <label class="pill" for="emp-contract">契約社員</label>
+        <input type="radio" name="emp" id="emp-freelance" value="freelance">
+        <label class="pill" for="emp-freelance">業務委託</label>
+      </div>
+      <table class="emp-ref">
+        <tr>
+          <th>項目</th><th>正社員</th><th>契約社員</th><th>業務委託</th>
+        </tr>
+        <tr>
+          <td>等級</td>
+          <td>J / M / S / E</td>
+          <td>J / M / S</td>
+          <td>J / M / S / E</td>
+        </tr>
+        <tr>
+          <td>評価制度</td>
+          <td class="check">フル適用</td>
+          <td class="check">フル適用</td>
+          <td class="check">フル適用</td>
+        </tr>
+        <tr>
+          <td>賞与</td>
+          <td class="check">あり（業績連動）</td>
+          <td class="check">あり（同基準）</td>
+          <td class="cross">なし（フィーに含む）</td>
+        </tr>
+        <tr>
+          <td>社会保険</td>
+          <td class="check">会社負担あり</td>
+          <td class="check">会社負担あり</td>
+          <td class="cross">自己負担</td>
+        </tr>
+        <tr>
+          <td>PJインセンティブ</td>
+          <td class="check">あり</td>
+          <td class="check">あり</td>
+          <td class="check">あり</td>
+        </tr>
+        <tr>
+          <td>報酬水準</td>
+          <td>基本給ベース</td>
+          <td>基本給ベース</td>
+          <td>基本給 x 1.55〜1.65</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 等級・ライン -->
+  <div class="card">
+    <div class="card-title">02 Grade & Line</div>
+    <div class="form-group">
+      <label>等級</label>
+      <div class="pill-group">
+        <input type="radio" name="grade" id="grade-j" value="J" checked>
+        <label class="pill" for="grade-j">J <span class="hint" style="margin-left:6px">ジュニア</span></label>
+        <input type="radio" name="grade" id="grade-m" value="M">
+        <label class="pill" for="grade-m">M <span class="hint" style="margin-left:6px">ミドル</span></label>
+        <input type="radio" name="grade" id="grade-s" value="S">
+        <label class="pill" for="grade-s">S <span class="hint" style="margin-left:6px">シニア</span></label>
+        <input type="radio" name="grade" id="grade-e" value="E">
+        <label class="pill" for="grade-e">E <span class="hint" style="margin-left:6px">エグゼクティブ</span></label>
+      </div>
+      <table class="grade-ref">
+        <tr>
+          <th>等級</th>
+          <th>判定基準</th>
+          <th>意思決定の範囲</th>
+          <th>評価ウェイト</th>
+        </tr>
+        <tr>
+          <td class="grade-label">J</td>
+          <td>指示+自走の半々。学びながら動く<br><span class="grade-eval">「やり方を教えてもらえれば、できます」</span></td>
+          <td>自タスクの進め方</td>
+          <td>VALUE 70% / 成果 30%</td>
+        </tr>
+        <tr>
+          <td class="grade-label">M</td>
+          <td>一人で回せる。後輩にも教えられる<br><span class="grade-eval">「任せてください。自分で考えて動きます」</span></td>
+          <td>担当PJ・業務の段取りと判断</td>
+          <td>VALUE 50% / 成果 50%</td>
+        </tr>
+        <tr>
+          <td class="grade-label">S</td>
+          <td>PJまたはチームを率いる。経営に提言する<br><span class="grade-eval">「チームごと率いて、成果を出します」</span></td>
+          <td>PJ方針・予算配分・採用関与</td>
+          <td>VALUE 30% / 成果 70%</td>
+        </tr>
+        <tr>
+          <td class="grade-label">E</td>
+          <td>経営に直接関与。事業・組織の成果に責任<br><span class="grade-eval">「事業を動かして、会社の未来をつくります」</span></td>
+          <td>事業方針・投資判断・組織設計</td>
+          <td>VALUE 20% / 成果 80%</td>
+        </tr>
+      </table>
+    </div>
+    <div class="form-group">
+      <label>ライン</label>
+      <div class="pill-group">
+        <input type="radio" name="line" id="line-gen" value="generalist" checked>
+        <label class="pill" for="line-gen">Generalist</label>
+        <input type="radio" name="line" id="line-spe" value="specialist">
+        <label class="pill" for="line-spe">Specialist</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>レンジ内ポジション <span class="hint">0%からスタート。半期評価により上下する</span></label>
+      <div class="slider-row">
+        <input type="range" id="range-pos" min="0" max="100" value="0">
+        <span class="slider-value" id="range-pos-val">0%</span>
+      </div>
+      <div class="tag-note">入社時は各等級のレンジ下限（0%）からスタート。半期評価の結果に応じてレンジ内の位置が上下し、レンジ上限に達した場合は昇格審査の対象となる。</div>
+    </div>
+  </div>
+
+  <!-- 稼働率 -->
+  <div class="card">
+    <div class="card-title">03 Working Hours</div>
+    <div class="form-group">
+      <label>稼働率</label>
+      <div class="pill-group">
+        <input type="radio" name="workrate" id="wr-full" value="1.0" checked>
+        <label class="pill" for="wr-full">フルタイム <span class="hint" style="margin-left:4px">160h/月・20日</span></label>
+        <input type="radio" name="workrate" id="wr-half" value="0.5">
+        <label class="pill" for="wr-half">ハーフタイム <span class="hint" style="margin-left:4px">80h/月・10日</span></label>
+        <input type="radio" name="workrate" id="wr-quarter" value="0.25">
+        <label class="pill" for="wr-quarter">1/4 <span class="hint" style="margin-left:4px">40h/月・5日</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- スキルタグ -->
+  <div class="card">
+    <div class="card-title">04 Skill Tags</div>
+    <div class="form-group">
+      <label>認定スキルタグを選択 <span class="hint">クリックで None → Standard → Top の順に切替</span></label>
+      <div class="tag-status" id="tag-status">選択中: 0タグ / 加算: +0%</div>
+    </div>
+
+    <!-- スキルタグ一覧（3状態クリック選択式） -->
+    <div class="tag-ref" style="margin-top:0; padding-top:0; border-top:none;">
+      <div class="tag-category">Creative & Production</div>
+      <div class="tag-list">
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Experience Design</span>
+          <span class="tag-desc">体験設計・感情導線設計・演出・コンテンツ企画</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Film & Video</span>
+          <span class="tag-desc">映像制作・映像演出・編集</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Sound Design</span>
+          <span class="tag-desc">音響設計・サウンドデザイン・PA・空間音響</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Architecture & Spatial</span>
+          <span class="tag-desc">建築設計・空間デザイン・照明設計・3DCG</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Product & Object</span>
+          <span class="tag-desc">プロダクトデザイン・グッズ制作・物販企画</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Graphic & Visual</span>
+          <span class="tag-desc">グラフィック・VI・ブランドデザイン</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">F&B Design</span>
+          <span class="tag-desc">フードデザイン・メニュー開発・飲食体験設計</span>
+          <span class="level-badge"></span>
+        </div>
+      </div>
+
+      <div class="tag-category">Business & Operations</div>
+      <div class="tag-list">
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Marketing</span>
+          <span class="tag-desc">マーケティング・PR・データ分析・集客戦略</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Consulting</span>
+          <span class="tag-desc">戦略立案・リサーチ・資料作成・クライアント提案</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Technology</span>
+          <span class="tag-desc">システム・DX・テクニカルディレクション</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">International</span>
+          <span class="tag-desc">海外事業開発・交渉・ライセンス</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Finance</span>
+          <span class="tag-desc">財務・経理・管理会計</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">Legal</span>
+          <span class="tag-desc">法務・契約・知財・リスク管理</span>
+          <span class="level-badge"></span>
+        </div>
+        <div class="tag-item selectable" data-level="none" onclick="cycleTag(this)">
+          <span class="tag-name">HR & Operations</span>
+          <span class="tag-desc">人事・総務・オペレーション</span>
+          <span class="level-badge"></span>
+        </div>
+      </div>
+      <div class="tag-note" style="margin-top:12px">
+        <strong>レベル別加算:</strong> Standard +5% / Top +15%（1タグあたり）<br>
+        <strong>複数タグ乗算:</strong> 2タグ x1.2 / 3タグ x1.5 / 4タグ以上 x1.8<br>
+        <strong>上限:</strong> 50%
+      </div>
+    </div>
+  </div>
+
+  <!-- 賞与（正社員・契約社員のみ） -->
+  <div class="card" id="bonus-card">
+    <div class="card-title">05 Bonus</div>
+    <div class="form-group">
+      <label>賞与月数 <span class="hint">業績連動（年間合計）</span></label>
+      <div class="slider-row">
+        <input type="range" id="bonus-months" min="0" max="6" value="2" step="0.5">
+        <span class="slider-value" id="bonus-val">2.0ヶ月</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div class="card result-card">
+    <div class="card-title">Simulation Result</div>
+    <div class="result-main">
+      <div class="result-label">理論年収（月額x12 + 賞与 / 税引前）</div>
+      <div class="result-amount" id="annual-total">--<span class="unit">万円</span></div>
+      <div class="result-range" id="annual-range"></div>
+    </div>
+    <div class="result-breakdown">
+      <div class="breakdown-item">
+        <div class="bl" id="monthly-label">月額基本給</div>
+        <div class="bv" id="monthly-amount">--<span class="bu">円</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bl" id="bonus-label">賞与（年間）</div>
+        <div class="bv" id="bonus-amount">--<span class="bu">円</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bl">日給換算</div>
+        <div class="bv" id="daily-amount">--<span class="bu">円</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bl">時給換算</div>
+        <div class="bv" id="hourly-amount">--<span class="bu">円</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bl">スキルタグ加算</div>
+        <div class="bv" id="tag-amount">--<span class="bu">%</span></div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bl">稼働率</div>
+        <div class="bv" id="workrate-display">--<span class="bu">%</span></div>
+      </div>
+    </div>
+    <!-- 残業制度内訳 -->
+    <div id="overtime-info" style="margin-top:16px; padding-top:16px; border-top:1px solid #333;">
+      <div id="overtime-detail" style="text-align:center; font-size:12px; color:#888; line-height:1.8;"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>計算の前提</strong><br>
+    ・正社員／契約社員の基本給は、業務委託フィーレンジから逆算（業務委託 = 基本給 x 1.60）<br>
+    ・業務委託フィーには賞与・社会保険相当分が含まれているため、賞与は別途加算されません<br>
+    ・スキルタグ加算は基本給（または月額フィー）に対する割合で加算（上限50%）<br>
+    ・スキルレベル: Standard +5% / Top +15%（1タグあたり）。複数タグで乗算ボーナス<br>
+    ・<strong>J/M等級</strong>: 月額給与に固定残業代45時間分を内包（基本給74% + 固定残業代26%）<br>
+    ・<strong>S/E等級（正社員）</strong>: 管理監督者 or 裁量労働制のため固定残業代なし<br>
+    ・<strong>S等級（契約社員）</strong>: 固定残業代45時間を適用（管理監督者の法的リスク回避）<br>
+    ・契約社員はE等級の適用がありません<br>
+    ・日給 = フルタイム月額 / 20営業日、時給 = フルタイム月額 / 160時間（稼働率で変動しない）<br>
+    ・すべての金額は10円未満切り捨て（下1桁切り捨て）で表示<br>
+    ・深夜手当（22:00-5:00 / 25%割増）は全等級に適用。本シミュレーションには含まれません<br>
+    ・PJインセンティブは業績により変動するため本シミュレーションには含まれません<br>
+    ・実際の報酬は個別の契約・評価により異なります
+  </div>
+
+</div>
+
+<script>
+// === DATA: 業務委託フィーレンジ（月額/フルタイム/税別） ===
+// 基本給年額から算出: (年額/12) x 1.60
+const FEE_RANGE = {
+  J: { generalist: [467000, 600000], specialist: [440000, 574000] },
+  M: { generalist: [600000, 800000], specialist: [574000, 760000] },
+  S: { generalist: [907000, 1334000], specialist: [854000, 1267000] },
+  E: { generalist: [1600000, 2267000], specialist: [1467000, 2134000] }
+};
+
+// 業務委託→正社員逆算係数
+const MARKUP = 1.60;
+
+// スキルタグ: レベル別ベース加算率
+const LEVEL_RATE = { none: 0, standard: 0.05, top: 0.15 };
+
+// 複数タグ乗算倍率
+const MULTI_TAG_MULTIPLIER = { 1: 1.0, 2: 1.2, 3: 1.5 };
+const MULTI_TAG_MULTIPLIER_4PLUS = 1.8;
+
+// 上限
+const TAG_CAP = 0.50;
+
+// 契約社員はE等級不可
+const CONTRACT_GRADES = ['J', 'M', 'S'];
+
+// タグ3状態サイクル: none → standard → top → none
+function cycleTag(el) {
+  const current = el.dataset.level;
+  const badge = el.querySelector('.level-badge');
+
+  // Remove current class
+  el.classList.remove('level-standard', 'level-top');
+
+  if (current === 'none') {
+    el.dataset.level = 'standard';
+    el.classList.add('level-standard');
+    badge.textContent = 'STD';
+  } else if (current === 'standard') {
+    el.dataset.level = 'top';
+    el.classList.add('level-top');
+    badge.textContent = 'TOP';
+  } else {
+    el.dataset.level = 'none';
+    badge.textContent = '';
+  }
+
+  updateTagStatus();
+  updateUI();
+}
+
+function getSelectedTags() {
+  const items = document.querySelectorAll('.tag-item.selectable');
+  let standardCount = 0, topCount = 0;
+  items.forEach(el => {
+    if (el.dataset.level === 'standard') standardCount++;
+    if (el.dataset.level === 'top') topCount++;
+  });
+  const totalCount = standardCount + topCount;
+  return { standardCount, topCount, totalCount };
+}
+
+function calcTagRate(tags) {
+  if (tags.totalCount === 0) return 0;
+  const baseSum = tags.standardCount * LEVEL_RATE.standard + tags.topCount * LEVEL_RATE.top;
+  let multiplier;
+  if (tags.totalCount >= 4) {
+    multiplier = MULTI_TAG_MULTIPLIER_4PLUS;
+  } else {
+    multiplier = MULTI_TAG_MULTIPLIER[tags.totalCount] || 1.0;
+  }
+  return Math.min(baseSum * multiplier, TAG_CAP);
+}
+
+function updateTagStatus() {
+  const t = getSelectedTags();
+  const tagRate = calcTagRate(t);
+  const pct = (tagRate * 100).toFixed(1);
+  const parts = [];
+  if (t.standardCount > 0) parts.push(`Standard x${t.standardCount}`);
+  if (t.topCount > 0) parts.push(`Top x${t.topCount}`);
+  const detail = parts.length > 0 ? ` (${parts.join(' + ')})` : '';
+  document.getElementById('tag-status').textContent =
+    `選択中: ${t.totalCount}タグ${detail} / 加算: +${pct}%`;
+}
+
+function getValues() {
+  const emp = document.querySelector('input[name="emp"]:checked').value;
+  const grade = document.querySelector('input[name="grade"]:checked').value;
+  const line = document.querySelector('input[name="line"]:checked').value;
+  const rangePos = parseInt(document.getElementById('range-pos').value) / 100;
+  const workRate = parseFloat(document.querySelector('input[name="workrate"]:checked').value);
+  const tags = getSelectedTags();
+  const bonusMonths = parseFloat(document.getElementById('bonus-months').value);
+  return { emp, grade, line, rangePos, workRate, tags, bonusMonths };
+}
+
+function calculate() {
+  const v = getValues();
+  const feeRange = FEE_RANGE[v.grade][v.line];
+  const feeMin = feeRange[0];
+  const feeMax = feeRange[1];
+
+  // スキルタグ加算率
+  const tagRate = calcTagRate(v.tags);
+
+  let monthlyBase, annualTotal, bonusTotal, monthlyLabel, bonusLabel;
+
+  // 下1桁切り捨て（10円未満切り捨て）
+  const floor10 = v => Math.floor(v / 10) * 10;
+
+  if (v.emp === 'freelance') {
+    // 業務委託: フィーレンジそのまま
+    const feeAtPos = feeMin + (feeMax - feeMin) * v.rangePos;
+    monthlyBase = floor10(feeAtPos * (1 + tagRate));
+    monthlyBase = floor10(monthlyBase * v.workRate);
+    bonusTotal = 0;
+    annualTotal = monthlyBase * 12;
+    monthlyLabel = '月額フィー（税別）';
+    bonusLabel = '賞与（フィーに含む）';
+  } else {
+    // 正社員・契約社員: フィーから逆算
+    const baseMin = floor10(feeMin / MARKUP);
+    const baseMax = floor10(feeMax / MARKUP);
+    const baseAtPos = baseMin + (baseMax - baseMin) * v.rangePos;
+    const baseWithTags = floor10(baseAtPos * (1 + tagRate));
+    monthlyBase = floor10(baseWithTags * v.workRate);
+    bonusTotal = floor10(monthlyBase * v.bonusMonths);
+    annualTotal = monthlyBase * 12 + bonusTotal;
+    monthlyLabel = '月額基本給';
+    bonusLabel = `賞与（${v.bonusMonths}ヶ月）`;
+  }
+
+  // レンジ表示用（min-max）
+  let rangeMinAnnual, rangeMaxAnnual;
+  if (v.emp === 'freelance') {
+    rangeMinAnnual = floor10(feeMin * (1 + tagRate) * v.workRate * 12);
+    rangeMaxAnnual = floor10(feeMax * (1 + tagRate) * v.workRate * 12);
+  } else {
+    const bMin = floor10(feeMin / MARKUP);
+    const bMax = floor10(feeMax / MARKUP);
+    rangeMinAnnual = floor10(bMin * (1 + tagRate) * v.workRate * (12 + v.bonusMonths));
+    rangeMaxAnnual = floor10(bMax * (1 + tagRate) * v.workRate * (12 + v.bonusMonths));
+  }
+
+  // Display
+  const annualMan = Math.floor(annualTotal / 10000);
+  document.getElementById('annual-total').innerHTML = annualMan.toLocaleString() + '<span class="unit">万円</span>';
+  document.getElementById('annual-range').textContent =
+    `レンジ: ${Math.floor(rangeMinAnnual/10000).toLocaleString()}万 〜 ${Math.floor(rangeMaxAnnual/10000).toLocaleString()}万`;
+
+  document.getElementById('monthly-label').textContent = monthlyLabel;
+  document.getElementById('monthly-amount').innerHTML = monthlyBase.toLocaleString() + '<span class="bu">円</span>';
+  document.getElementById('bonus-label').textContent = bonusLabel;
+  document.getElementById('bonus-amount').innerHTML = bonusTotal.toLocaleString() + '<span class="bu">円</span>';
+  // 日給・時給はフルタイム換算（稼働率で変動しない）
+  const monthlyFull = v.workRate > 0 ? floor10(monthlyBase / v.workRate) : 0;
+  const dailyRate = floor10(monthlyFull / 20);
+  const hourlyRate = floor10(monthlyFull / 160);
+  document.getElementById('daily-amount').innerHTML = dailyRate.toLocaleString() + '<span class="bu">円</span>';
+  document.getElementById('hourly-amount').innerHTML = hourlyRate.toLocaleString() + '<span class="bu">円</span>';
+
+  document.getElementById('tag-amount').innerHTML = (tagRate * 100).toFixed(1) + '<span class="bu">%</span>';
+  document.getElementById('workrate-display').innerHTML = (v.workRate * 100) + '<span class="bu">%</span>';
+
+  // 残業制度内訳
+  const otDiv = document.getElementById('overtime-detail');
+  if (v.emp === 'freelance') {
+    otDiv.innerHTML = '<span style="color:var(--gold-light)">業務委託</span> — 労基法の適用対象外';
+  } else if (v.grade === 'E' || (v.grade === 'S' && v.line === 'generalist' && v.emp === 'fulltime')) {
+    otDiv.innerHTML = '<span style="color:var(--gold)">管理監督者</span> — 時間外手当なし（深夜手当25%のみ適用）';
+  } else if (v.grade === 'S' && v.line === 'specialist' && v.emp === 'fulltime') {
+    otDiv.innerHTML = '<span style="color:var(--gold)">専門業務型裁量労働制</span> — みなし労働8h/日（深夜・休日手当のみ適用）';
+  } else {
+    // J/M or 契約社員S: 固定残業代45h
+    const basePortion = floor10(monthlyBase * 0.740);
+    const otPortion = monthlyBase - basePortion;
+    otDiv.innerHTML =
+      '<span style="color:var(--gold)">固定残業代 45時間/月 内包</span><br>' +
+      '基本給: <span style="color:var(--white)">' + basePortion.toLocaleString() + '円</span>（74.0%）' +
+      ' / 固定残業代: <span style="color:var(--white)">' + otPortion.toLocaleString() + '円</span>（26.0%）' +
+      '<br><span style="font-size:11px">超過分は1分単位で別途全額支給</span>';
+  }
+}
+
+function updateUI() {
+  const emp = document.querySelector('input[name="emp"]:checked').value;
+  const grade = document.querySelector('input[name="grade"]:checked').value;
+
+  // 賞与カードの表示切替
+  document.getElementById('bonus-card').style.display = (emp === 'freelance') ? 'none' : 'block';
+
+  // 契約社員: E等級を無効化
+  const gradeE = document.getElementById('grade-e');
+  if (emp === 'contract') {
+    gradeE.disabled = true;
+    if (grade === 'E') {
+      document.getElementById('grade-s').checked = true;
+    }
+  } else {
+    gradeE.disabled = false;
+  }
+
+  // スライダー表示更新
+  document.getElementById('range-pos-val').textContent = document.getElementById('range-pos').value + '%';
+  const bm = document.getElementById('bonus-months').value;
+  document.getElementById('bonus-val').textContent = parseFloat(bm).toFixed(1) + 'ヶ月';
+
+  calculate();
+}
+
+// Event listeners
+document.querySelectorAll('input[type="radio"], input[type="range"]').forEach(el => {
+  el.addEventListener('input', updateUI);
+  el.addEventListener('change', updateUI);
+});
+
+// Init
+updateUI();
+</script>
+
+</body>
+</html>
